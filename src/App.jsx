@@ -1,35 +1,51 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+import { useState, useEffect } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+import * as petService from "./services/petService";
+import PetList from "./components/PetList";
+import PetDetail from "./components/PetDetail";
+import PetForm from "./components/PetForm";
+
+const App = () => {
+  const [pets, setPets] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [openForm, setOpenForm] = useState(false);
+
+  useEffect(() => {
+    async function getPets() {
+      try {
+        const pets = await petService.index();
+        console.log(pets, "----------------------pets");
+        setPets(pets);//set the pets state to the pets array
+      } catch (err) {
+
+        console.log(err);
+      }
+    }
+    getPets();
+
+  }, []);
+
+  async function handleAddPet(petData) {
+    try {
+      const newPet = await petService.create(petData);
+      setPets([...pets, newPet]);
+    }catch (err) {
+      console.log(err, "----------------------error");
+    }
+  }
+  
+  //openform function
+  const handleOpenform = () => {
+    setOpenForm(!openForm);
+  }
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <PetList pets={pets} setSelected={setSelected} handleOpenform={handleOpenform} isFormOpen={openForm} />
+      {openForm ? (<PetForm handleAddPet={handleAddPet} />) :<PetDetail selected={selected} setSelected={setSelected} />}
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;
